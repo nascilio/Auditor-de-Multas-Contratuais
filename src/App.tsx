@@ -27,7 +27,6 @@ import {
   getDaysDifference,
   formatDateBR
 } from './utils/calculator';
-import ContractTimeline from './components/ContractTimeline';
 import CalculationBreakdown from './components/CalculationBreakdown';
 import AuditHistory from './components/AuditHistory';
 
@@ -475,9 +474,6 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-
-                {/* Timeline Visual Progress Component */}
-                <ContractTimeline data={currentContractData} result={result} />
 
                 {/* Detailed calculation steps */}
                 <CalculationBreakdown result={result} useRounding={useRounding} />

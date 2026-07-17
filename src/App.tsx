@@ -191,21 +191,22 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 pb-16 print:bg-white print:pb-0">
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900 pb-16 print:bg-white print:pb-0">
       
       {/* Header Panel */}
-      <header className="bg-white border-b border-slate-200 py-4 px-4 md:px-8 shadow-xs sticky top-0 z-40 print:hidden h-16 flex items-center">
+      <header className="bg-slate-950 border-b border-slate-900 py-4 px-4 md:px-8 shadow-md sticky top-0 z-40 print:hidden h-16 flex items-center">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center text-white font-bold text-base shadow-xs">
-              $
+            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-inner border border-slate-800 relative overflow-hidden group">
+              <Calculator className="w-5 h-5 text-blue-500 relative z-10 group-hover:scale-110 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-black opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
             <div>
-              <h1 className="text-base font-bold font-display text-slate-800 tracking-tight flex items-center gap-1.5 leading-none">
-                Auditoria Pro-Rata <span className="text-indigo-600 text-xs font-semibold bg-indigo-50 px-1.5 py-0.5 rounded ml-1 font-mono">v2.4</span>
+              <h1 className="text-sm md:text-base font-extrabold font-display text-white tracking-tight flex items-center gap-1.5 leading-none">
+                Auditor de Multas <span className="bg-gradient-to-r from-blue-600 to-blue-800 text-white text-[9px] font-black px-2 py-0.5 rounded-sm font-mono uppercase tracking-wider">Pro-Rata</span>
               </h1>
-              <p className="text-[10px] text-slate-400 font-medium tracking-wide mt-0.5 uppercase">
-                Auditoria e Faturamento Rescisório
+              <p className="text-[9px] text-slate-400 font-bold tracking-wider mt-1 uppercase">
+                Auditoria de Fidelidade de Contratos
               </p>
             </div>
           </div>
@@ -217,9 +218,9 @@ export default function App() {
                 Protocolo: #2026-{contractNumber || '001'}
               </span>
             </div>
-            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
-            <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-600 font-semibold text-xs">
-              AD
+            <div className="h-8 w-px bg-slate-800 hidden sm:block" />
+            <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-white font-bold text-xs font-mono shadow-inner bg-gradient-to-tr from-blue-600 to-slate-950">
+              AM
             </div>
           </div>
         </div>
@@ -230,9 +231,10 @@ export default function App() {
         
         {/* Left Side: Parameters and Input Form (4 Cols) */}
         <div className="lg:col-span-4 space-y-6 print:hidden">
-          <section className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative">
+          <section className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-slate-950" />
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5 pb-3 border-b border-slate-100 flex items-center gap-2">
-              <FileCheck2 className="w-4 h-4 text-indigo-600" />
+              <FileCheck2 className="w-4 h-4 text-blue-600" />
               Parâmetros de Entrada
             </h2>
 
@@ -243,16 +245,16 @@ export default function App() {
               <div>
                 <label className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1">
-                    <CalendarDays className="w-3.5 h-3.5 text-indigo-600" />
+                    <CalendarDays className="w-3.5 h-3.5 text-blue-600" />
                     Data de Assinatura do Contrato
                   </span>
-                  <span className="text-[10px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded font-medium">Início Fidelidade</span>
+                  <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-medium">Início Fidelidade</span>
                 </label>
                 <input
                   type="date"
                   value={signatureDate}
                   onChange={(e) => setSignatureDate(e.target.value)}
-                  className="w-full text-sm px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-600 focus:outline-hidden transition-all font-mono text-slate-800"
+                  className="w-full text-sm px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-hidden transition-all font-mono text-slate-800"
                   required
                 />
               </div>
@@ -282,7 +284,7 @@ export default function App() {
                   type="date"
                   value={requestDate}
                   onChange={(e) => setRequestDate(e.target.value)}
-                  className="w-full text-sm px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-600 focus:outline-hidden transition-all font-mono text-slate-800"
+                  className="w-full text-sm px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-hidden transition-all font-mono text-slate-800"
                   required
                 />
               </div>
@@ -291,7 +293,7 @@ export default function App() {
               <div>
                 <label className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1">
-                    <DollarSign className="w-3.5 h-3.5 text-indigo-600" />
+                    <DollarSign className="w-3.5 h-3.5 text-blue-600" />
                     Valor da Última Mensalidade Base
                   </span>
                   <span className="text-[10px] text-slate-400 font-mono">BRL (R$)</span>
@@ -305,7 +307,7 @@ export default function App() {
                     value={monthlyFee || ''}
                     onChange={(e) => setMonthlyFee(parseFloat(e.target.value) || 0)}
                     placeholder="500,00"
-                    className="w-full text-sm pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-600 focus:outline-hidden transition-all font-mono text-slate-800 font-semibold"
+                    className="w-full text-sm pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-hidden transition-all font-mono text-slate-800 font-semibold"
                     required
                   />
                 </div>
@@ -343,7 +345,7 @@ export default function App() {
                 onClick={() => setActiveTab('visual')}
                 className={`flex-1 sm:flex-initial px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
                   activeTab === 'visual' 
-                    ? 'bg-white text-indigo-600 shadow-sm' 
+                    ? 'bg-slate-900 text-white shadow-sm' 
                     : 'text-slate-600 hover:text-slate-800'
                 }`}
               >
@@ -353,7 +355,7 @@ export default function App() {
                 onClick={() => setActiveTab('markdown')}
                 className={`flex-1 sm:flex-initial px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
                   activeTab === 'markdown' 
-                    ? 'bg-white text-indigo-600 shadow-sm' 
+                    ? 'bg-slate-900 text-white shadow-sm' 
                     : 'text-slate-600 hover:text-slate-800'
                 }`}
               >
@@ -369,7 +371,7 @@ export default function App() {
                   onClick={() => setUseRounding(!useRounding)}
                   className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all border ${
                     useRounding 
-                      ? 'bg-indigo-50 border-indigo-200 text-indigo-600' 
+                      ? 'bg-blue-50 border-blue-200 text-blue-600' 
                       : 'bg-slate-50 border-slate-200 text-slate-600'
                   }`}
                   title="Alterne entre truncamento para 4 casas decimais ou arredondamento padrão."
@@ -397,7 +399,8 @@ export default function App() {
                 {/* 3 Metrics Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Dias Restantes Card */}
-                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-slate-900" />
                     <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-mono block mb-2">Dias Restantes</span>
                     <div className="text-3xl font-extrabold font-mono text-slate-800">
                       {result.isExempt ? '0 dias' : `${result.daysRemaining} dias`}
@@ -405,10 +408,11 @@ export default function App() {
                   </div>
                   
                   {/* Proporcional Restante Card */}
-                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600" />
                     <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-mono block mb-2">Proporcional Restante</span>
                     <div>
-                      <div className="text-lg font-bold text-indigo-600 leading-tight">
+                      <div className="text-lg font-bold text-blue-600 leading-tight">
                         {result.isExempt ? '0 meses e 0 dias' : `${result.monthsPart} ${result.monthsPart === 1 ? 'mês' : 'meses'} e ${result.daysPart} ${result.daysPart === 1 ? 'dia' : 'dias'}`}
                       </div>
                       {!result.isExempt && (
@@ -420,7 +424,8 @@ export default function App() {
                   </div>
 
                   {/* Mensalidade Base Card */}
-                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-slate-950" />
                     <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-mono block mb-2">Mensalidade Base</span>
                     <div className="text-3xl font-extrabold font-mono text-slate-800">
                       {result.monthlyFeeFormatted}
@@ -433,7 +438,7 @@ export default function App() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                     <div>
                       <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider font-display flex items-center gap-1.5">
-                        <FileText className="w-4 h-4 text-indigo-600" />
+                        <FileText className="w-4 h-4 text-blue-600" />
                         Texto Pronto para Enviar ao Cliente
                       </h3>
                       <p className="text-xs text-slate-400 mt-0.5">
@@ -467,7 +472,7 @@ export default function App() {
                     <textarea
                       readOnly
                       value={clientShareMessage}
-                      className="w-full h-44 rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs font-sans text-slate-700 leading-relaxed resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full h-44 rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs font-sans text-slate-700 leading-relaxed resize-none focus:outline-none focus:ring-1 focus:ring-blue-600"
                     />
                     <div className="absolute bottom-3 right-3 text-[10px] text-slate-400 font-medium bg-white/80 backdrop-blur-xs px-2 py-0.5 rounded border border-slate-100">
                       Rápido e Prático
@@ -483,7 +488,7 @@ export default function App() {
               <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs relative">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider font-display flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-indigo-600" />
+                    <FileText className="w-4 h-4 text-blue-600" />
                     Relatório Markdown Gerado
                   </h3>
                   
@@ -493,7 +498,7 @@ export default function App() {
                     className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all ${
                       copied 
                         ? 'bg-emerald-50 border border-emerald-200 text-emerald-600' 
-                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
                     }`}
                   >
                     {copied ? (
@@ -518,7 +523,7 @@ export default function App() {
                 </div>
 
                 <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-3">
-                  <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">
+                  <div className="p-1.5 bg-blue-50 rounded-lg text-blue-600">
                     <Info className="w-4 h-4" />
                   </div>
                   <div>

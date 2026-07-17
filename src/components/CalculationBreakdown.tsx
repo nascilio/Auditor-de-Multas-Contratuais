@@ -23,16 +23,17 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
   const methodLabel = useRounding ? 'Arredondamento Padrão' : 'Truncamento de Casas Decimais';
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-      <h3 className="text-lg font-semibold font-display text-slate-900 mb-6 flex items-center gap-2">
-        <Info className="w-5 h-5 text-indigo-600" />
+    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-slate-950" />
+      <h3 className="text-lg font-bold font-display text-slate-900 mb-6 flex items-center gap-2">
+        <Info className="w-5 h-5 text-blue-600" />
         Memória de Cálculo Detalhada (Auditoria)
       </h3>
 
       <div className="space-y-6">
         {/* Step 1: Fidelidade */}
-        <div className="relative pl-6 pb-6 border-l-2 border-indigo-100 last:border-0">
-          <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-indigo-600 border-4 border-white shadow-sm" />
+        <div className="relative pl-6 pb-6 border-l-2 border-slate-200 last:border-0">
+          <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-slate-900 border-4 border-white shadow-sm" />
           <h4 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
             Passo 1: Verificação da Fidelidade de 12 Meses
           </h4>
@@ -59,8 +60,8 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
         </div>
 
         {/* Step 2: Dias Restantes */}
-        <div className="relative pl-6 pb-6 border-l-2 border-indigo-100 last:border-0">
-          <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-indigo-600 border-4 border-white shadow-sm" />
+        <div className="relative pl-6 pb-6 border-l-2 border-slate-200 last:border-0">
+          <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow-sm" />
           <h4 className="text-sm font-semibold text-slate-800">
             Passo 2: Cálculo dos Dias Restantes
           </h4>
@@ -69,8 +70,8 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
           </p>
           {!isExempt ? (
             <div className="mt-3 p-3 bg-slate-50 rounded-xl text-xs font-mono text-slate-700 space-y-1">
-              <div>Fórmula: Dias Restantes = Data Fim Prevista - Data de Solicitação</div>
-              <div>Cálculo: {result.endDateFormatted} - {result.requestDateFormatted} = <strong className="text-indigo-600">{daysRemaining} dias</strong></div>
+               <div>Fórmula: Dias Restantes = Data Fim Prevista - Data de Solicitação</div>
+              <div>Cálculo: {result.endDateFormatted} - {result.requestDateFormatted} = <strong className="text-blue-600">{daysRemaining} dias</strong></div>
             </div>
           ) : (
             <div className="mt-3 p-3 bg-slate-50 rounded-xl text-xs font-mono text-slate-500">
@@ -80,8 +81,8 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
         </div>
 
         {/* Step 3: Proporcional de Meses */}
-        <div className="relative pl-6 pb-6 border-l-2 border-indigo-100 last:border-0">
-          <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-indigo-600 border-4 border-white shadow-sm" />
+        <div className="relative pl-6 pb-6 border-l-2 border-slate-200 last:border-0">
+          <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-slate-900 border-4 border-white shadow-sm" />
           <h4 className="text-sm font-semibold text-slate-800">
             Passo 3: Conversão para Proporcional em Meses (Pro-Rata)
           </h4>
@@ -94,12 +95,12 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
               <div>Cálculo Exato: {daysRemaining} / 30.4167 = <span className="font-semibold text-slate-900">{(daysRemaining / 30.4167).toFixed(8)}... meses</span></div>
               
               <div className="pt-2 border-t border-slate-200 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className={`p-2 rounded-lg border ${!useRounding ? 'border-indigo-200 bg-indigo-50/50' : 'border-slate-100'}`}>
-                  <span className="font-semibold text-slate-700 block text-[10px] uppercase tracking-wider">Truncamento (4 Decimais)</span>
+                <div className={`p-2 rounded-lg border ${!useRounding ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100'}`}>
+                  <span className="font-semibold text-blue-700 block text-[10px] uppercase tracking-wider">Truncamento (4 Decimais)</span>
                   <span className="text-sm font-bold text-slate-800">{formatDecimalBR(monthsRemainingTruncated, 4)} meses</span>
                 </div>
-                <div className={`p-2 rounded-lg border ${useRounding ? 'border-indigo-200 bg-indigo-50/50' : 'border-slate-100'}`}>
-                  <span className="font-semibold text-slate-700 block text-[10px] uppercase tracking-wider">Arredondamento (4 Decimais)</span>
+                <div className={`p-2 rounded-lg border ${useRounding ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100'}`}>
+                  <span className="font-semibold text-blue-700 block text-[10px] uppercase tracking-wider">Arredondamento (4 Decimais)</span>
                   <span className="text-sm font-bold text-slate-800">{formatDecimalBR(monthsRemainingRounded, 4)} meses</span>
                 </div>
               </div>
@@ -113,7 +114,7 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
 
         {/* Step 4: Decomposição Didática de Parcelas (Requested Feature) */}
         {!isExempt && result.breakdown && result.breakdown.length > 0 && (
-          <div className="relative pl-6 pb-6 border-l-2 border-indigo-100 last:border-0">
+          <div className="relative pl-6 pb-6 border-l-2 border-slate-200 last:border-0">
             <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-emerald-500 border-4 border-white shadow-sm" />
             <h4 className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
               Passo 4: Decomposição Didática de Parcelas (Pro-Rata)
@@ -130,11 +131,11 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
                   className={`p-3 rounded-xl flex items-center justify-between border text-xs ${
                     item.type === 'month' 
                       ? 'bg-slate-50/80 border-slate-200' 
-                      : 'bg-indigo-50/50 border-indigo-150 text-indigo-900'
+                      : 'bg-blue-50/50 border-blue-100 text-blue-900'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${item.type === 'month' ? 'bg-slate-400' : 'bg-indigo-500 animate-pulse'}`} />
+                    <span className={`w-2 h-2 rounded-full ${item.type === 'month' ? 'bg-slate-400' : 'bg-blue-500 animate-pulse'}`} />
                     <div>
                       <span className="font-bold font-mono text-slate-800">{item.label}</span>
                       <span className="text-[10px] text-slate-400 block font-medium uppercase mt-0.5 tracking-wide">
@@ -167,8 +168,8 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
         )}
 
         {/* Step 5: Fine Calculation */}
-        <div className="relative pl-6 pb-6 border-l-2 border-indigo-100 last:border-0">
-          <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-indigo-600 border-4 border-white shadow-sm" />
+        <div className="relative pl-6 pb-6 border-l-2 border-slate-200 last:border-0">
+          <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow-sm" />
           <h4 className="text-sm font-semibold text-slate-800">
             Passo {result.breakdown && result.breakdown.length > 0 ? '5' : '4'}: Cálculo Final da Multa Rescisória
           </h4>
@@ -190,7 +191,7 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
                 </div>
                 <div className="flex justify-between items-center text-sm pt-1.5 border-t border-slate-200 font-bold text-slate-900">
                   <span>Multa Resultante:</span>
-                  <span className="text-indigo-600 text-base">{formatCurrencyBR(fineVal)}</span>
+                  <span className="text-blue-600 text-base">{formatCurrencyBR(fineVal)}</span>
                 </div>
               </div>
             </div>

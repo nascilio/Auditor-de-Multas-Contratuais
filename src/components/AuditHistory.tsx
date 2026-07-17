@@ -26,7 +26,7 @@ export default function AuditHistory({ history, onSelect, onDelete, onClear }: A
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col h-full max-h-[500px]">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider font-display flex items-center gap-1.5">
-          <FileClock className="w-4 h-4 text-indigo-600" />
+          <FileClock className="w-4 h-4 text-blue-600" />
           Auditorias Recentes
         </h3>
         <button 
@@ -50,7 +50,7 @@ export default function AuditHistory({ history, onSelect, onDelete, onClear }: A
                   {item.clientName || 'Cliente sem nome'}
                 </span>
                 {item.contractNumber && (
-                  <span className="text-[10px] bg-indigo-50 text-indigo-600 font-mono font-medium px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] bg-blue-50 text-blue-600 font-mono font-medium px-1.5 py-0.5 rounded">
                     #{item.contractNumber}
                   </span>
                 )}

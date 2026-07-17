@@ -196,54 +196,44 @@ export function generateMarkdownReport(data: ContractData, useRounding: boolean 
 
 export function generateClientShareMessage(data: ContractData, useRounding: boolean = false): string {
   const result = calculateFine(data);
-  const clientName = data.clientName || 'Prezado(a) Cliente';
-  const contractNum = data.contractNumber ? ` (Contrato: #${data.contractNumber})` : '';
   const fineValue = useRounding ? result.fineValueRounded : result.fineValueTruncated;
   const fineFormatted = formatCurrencyBR(fineValue);
   
   if (result.isExempt) {
-    return `Prezado(a) ${clientName},
+    return `Olá! Realizamos a auditoria de fidelidade de seu contrato:
 
-Gostaria de informar que realizamos a auditoria da fidelidade de seu contrato${contractNum}.
+📅 *Início:* ${result.signatureDateFormatted}
+📅 *Cancelamento:* ${result.requestDateFormatted}
 
-Identificamos que o período mínimo de permanência de 12 meses já foi integralmente cumprido ou superado (solicitado em ${result.requestDateFormatted}, com início em ${result.signatureDateFormatted}).
+✅ *Status:* O período de fidelidade de 12 meses já foi cumprido integralmente. A rescisão foi efetuada *sem cobrança de multa compensatória*.
 
-Dessa forma, a rescisão contratual foi efetuada sem nenhuma incidência de multa compensatória.
-
-Agradecemos pela parceria!
-Atenciosamente,
-Auditoria Financeira`;
+Ficamos à disposição para qualquer dúvida!`;
   }
 
-  // Decomposição das parcelas
+  // Decomposição das parcelas de forma compacta
   let parcelasTexto = '';
   result.breakdown.forEach((item) => {
     const valorFormatado = formatCurrencyBR(item.value);
     if (item.type === 'month') {
-      parcelasTexto += `• ${item.label}: ${valorFormatado} (1 mês completo)\n`;
+      parcelasTexto += `• *${item.label}:* ${valorFormatado} (mês cheio)\n`;
     } else {
-      const formattedQuantity = item.quantity.toFixed(4).replace('.', ',');
-      parcelasTexto += `• ${item.label}: ${valorFormatado} (${formattedQuantity} dias proporcionais base 30,4167)\n`;
+      parcelasTexto += `• *${item.label}:* ${valorFormatado} (pro-rata)\n`;
     }
   });
 
-  return `Prezado(a) ${clientName},
+  return `Olá! Segue o detalhamento da multa compensatória do seu contrato:
 
-Gostaria de apresentar o detalhamento da auditoria de faturamento rescisório de seu contrato${contractNum}:
+📅 *Início:* ${result.signatureDateFormatted}
+📅 *Fim Previsto:* ${result.endDateFormatted}
+📅 *Cancelamento:* ${result.requestDateFormatted}
+💵 *Mensalidade:* ${result.monthlyFeeFormatted}
 
-• Início do Contrato: ${result.signatureDateFormatted}
-• Fim Previsto da Fidelidade: ${result.endDateFormatted}
-• Data de Solicitação da Rescisão: ${result.requestDateFormatted}
-• Valor da Mensalidade Base: ${result.monthlyFeeFormatted}
+⏳ *Tempo Restante:* ${result.daysRemaining} dias (${result.monthsPart} ${result.monthsPart === 1 ? 'mês' : 'meses'} e ${result.daysPart} ${result.daysPart === 1 ? 'dia' : 'dias'})
 
-Com base nestas datas, restam ainda ${result.daysRemaining} dias para a conclusão do período de fidelidade contratual (correspondendo a exatamente ${result.monthsPart} ${result.monthsPart === 1 ? 'mês' : 'meses'} e ${result.daysPart} ${result.daysPart === 1 ? 'dia' : 'dias'}).
-
-O cálculo pro-rata (proporcional) foi decomposto da seguinte forma didática:
+📊 *Decomposição do Cálculo:*
 ${parcelasTexto}
-▶ VALOR TOTAL DA MULTA COMPENSATÓRIA: ${fineFormatted}
+💰 *VALOR TOTAL DA MULTA:* *${fineFormatted}*
 
-Ficamos à disposição para qualquer esclarecimento adicional.
-Atenciosamente,
-Auditoria Financeira`;
+Ficamos à disposição para esclarecer qualquer dúvida!`;
 }
 

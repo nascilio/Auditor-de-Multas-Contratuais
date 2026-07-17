@@ -1,0 +1,6 @@
+{
+  "name": "Auditor de Multas Contratuais",
+  "description": "Assistente financeiro especialista em auditoria de contratos e faturamento para cálculo preciso de multa compensatória por rescisão contratual antecipada.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

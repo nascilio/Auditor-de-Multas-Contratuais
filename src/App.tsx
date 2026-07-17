@@ -237,57 +237,9 @@ export default function App() {
               Parâmetros de Entrada
             </h2>
 
-            {/* Quick Presets */}
-            <div className="mb-6">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                Cenários Pré-carregados
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {SCENARIOS.map((sc, i) => (
-                  <button
-                    key={i}
-                    onClick={() => loadScenario(sc)}
-                    className="text-xs px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-lg border border-slate-100 hover:border-indigo-100 transition-all font-medium"
-                  >
-                    {sc.name.split(' (')[0]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Form Fields */}
             <div className="space-y-4">
               
-              {/* Optional Client and Number info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center gap-1">
-                    <User className="w-3.5 h-3.5 text-slate-400" />
-                    Nome do Cliente
-                  </label>
-                  <input
-                    type="text"
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                    placeholder="Ex: Empresa Alfa"
-                    className="w-full text-sm px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-600 focus:outline-hidden transition-all text-slate-800"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center gap-1">
-                    <FileText className="w-3.5 h-3.5 text-slate-400" />
-                    Número do Contrato
-                  </label>
-                  <input
-                    type="text"
-                    value={contractNumber}
-                    onChange={(e) => setContractNumber(e.target.value)}
-                    placeholder="Ex: 2026-001"
-                    className="w-full text-sm px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-600 focus:outline-hidden transition-all font-mono text-slate-800"
-                  />
-                </div>
-              </div>
-
               {/* Data de Assinatura */}
               <div>
                 <label className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
@@ -360,20 +312,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Observações da rescisão */}
-              <div>
-                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">
-                  Observações de Auditoria (Opcional)
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Justificativa do cancelamento, dados complementares..."
-                  rows={2}
-                  className="w-full text-sm px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-600 focus:outline-hidden transition-all text-slate-800"
-                />
-              </div>
-
               {/* Warning/Validation Message */}
               {validationError && (
                 <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-amber-800 text-xs font-medium">
@@ -381,18 +319,6 @@ export default function App() {
                   <span>{validationError}</span>
                 </div>
               )}
-
-              {/* Action Buttons */}
-              <div className="pt-2 flex gap-3">
-                <button
-                  onClick={handleSaveToHistory}
-                  disabled={!signatureDate || !requestDate || monthlyFee <= 0}
-                  className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl shadow-md shadow-indigo-100 hover:shadow-lg hover:shadow-indigo-100 transition-all font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
-                >
-                  <Plus className="w-4 h-4" />
-                  Salvar Auditoria
-                </button>
-              </div>
 
               {/* Business Rule Banner inside Sidebar */}
               <div className="border-t border-slate-100 pt-4 mt-2">
@@ -406,21 +332,6 @@ export default function App() {
 
             </div>
           </section>
-
-          {/* History List Component */}
-          <AuditHistory 
-            history={history}
-            onSelect={(item) => {
-              setSignatureDate(item.signatureDate);
-              setMonthlyFee(item.monthlyFee);
-              setRequestDate(item.requestDate);
-              setClientName(item.clientName || '');
-              setContractNumber(item.contractNumber || '');
-              setNotes(item.notes || '');
-            }}
-            onDelete={handleDeleteHistoryItem}
-            onClear={handleClearHistory}
-          />
         </div>
 
         {/* Right Side: Visual and Markdown Outputs (8 Cols) */}
@@ -484,103 +395,38 @@ export default function App() {
             {activeTab === 'visual' ? (
               <div className="space-y-6">
                 
-                {/* Visual Overview card */}
-                <div id="print-section" className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden print:border-0 print:shadow-none">
+                {/* 3 Metrics Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Dias Restantes Card */}
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-mono block mb-2">Dias Restantes</span>
+                    <div className="text-3xl font-extrabold font-mono text-slate-800">
+                      {result.isExempt ? '0 dias' : `${result.daysRemaining} dias`}
+                    </div>
+                  </div>
                   
-                  {/* Document header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                  {/* Proporcional Restante Card */}
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-mono block mb-2">Proporcional Restante</span>
                     <div>
-                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider font-display ${
-                        result.isExempt 
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
-                          : 'bg-amber-50 text-amber-700 border border-amber-100'
-                      }`}>
-                        {result.isExempt ? 'Status: Fidelidade Cumprida (Isento)' : 'Status: Rescisão Antecipada'}
-                      </span>
-                      
-                      <h2 className="text-xl font-bold font-display text-slate-800 mt-2">
-                        {clientName || 'Cliente Consumidor Final'}
-                      </h2>
-                      {contractNumber && (
-                        <p className="text-xs text-slate-400 font-mono mt-0.5">
-                          Código de Registro: #{contractNumber}
-                        </p>
+                      <div className="text-lg font-bold text-indigo-600 leading-tight">
+                        {result.isExempt ? '0 meses e 0 dias' : `${result.monthsPart} ${result.monthsPart === 1 ? 'mês' : 'meses'} e ${result.daysPart} ${result.daysPart === 1 ? 'dia' : 'dias'}`}
+                      </div>
+                      {!result.isExempt && (
+                        <span className="text-[11px] text-slate-400 font-mono mt-1 block">
+                          ({(useRounding ? result.monthsRemainingRounded : result.monthsRemainingTruncated).toFixed(4).replace('.', ',')} meses)
+                        </span>
                       )}
-                    </div>
-                    
-                    <div className="text-left sm:text-right">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-mono block">Relatório Auditado</span>
-                      <span className="text-xs font-bold text-slate-700 font-mono mt-0.5 block">
-                        {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
-                      </span>
                     </div>
                   </div>
 
-                  {/* Main Grid: Details + Big Result Card */}
-                  <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6">
-                    
-                    {/* Left Part: Memória de Cálculo (7 Cols) */}
-                    <div className="md:col-span-7 space-y-4 flex flex-col justify-between">
-                      <div>
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Métricas Consolidadas</h3>
-                        <div className="space-y-3.5">
-                          <div className="flex justify-between border-b border-slate-100 pb-2">
-                            <span className="text-sm text-slate-600">Dias Restantes</span>
-                            <span className="text-sm font-mono font-bold text-slate-800">{result.isExempt ? '0 dias' : `${result.daysRemaining} dias`}</span>
-                          </div>
-                          <div className="flex justify-between border-b border-slate-100 pb-2">
-                            <span className="text-sm text-slate-600">Proporcional Restante</span>
-                            <span className="text-sm font-mono font-bold text-indigo-600">
-                              {result.isExempt ? '0 meses e 0 dias' : `${result.monthsPart} ${result.monthsPart === 1 ? 'mês' : 'meses'} e ${result.daysPart} ${result.daysPart === 1 ? 'dia' : 'dias'}`}
-                              <span className="text-[11px] text-slate-400 font-normal ml-1.5 font-sans">
-                                ({result.isExempt ? '0,0000' : (useRounding ? result.monthsRemainingRounded.toFixed(4) : result.monthsRemainingTruncated.toFixed(4)).replace('.', ',')} meses)
-                              </span>
-                            </span>
-                          </div>
-                          <div className="flex justify-between border-b border-slate-100 pb-2">
-                            <span className="text-sm text-slate-600">Mensalidade Base</span>
-                            <span className="text-sm font-mono font-bold text-slate-800">{result.monthlyFeeFormatted}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Notes panel if active */}
-                      {notes && (
-                        <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-600 italic mt-4">
-                          <strong>Obs:</strong> {notes}
-                        </div>
-                      )}
+                  {/* Mensalidade Base Card */}
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-mono block mb-2">Mensalidade Base</span>
+                    <div className="text-3xl font-extrabold font-mono text-slate-800">
+                      {result.monthlyFeeFormatted}
                     </div>
-
-                    {/* Right Part: Dark Slate-900 Card (5 Cols) */}
-                    <div className="md:col-span-5 bg-slate-900 text-white p-6 rounded-2xl flex flex-col justify-center items-center text-center relative overflow-hidden shadow-lg min-h-[220px]">
-                      {/* Abstract Background Icon */}
-                      <div className="absolute top-0 right-0 p-4 opacity-5 text-white pointer-events-none">
-                         <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
-                      </div>
-
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">
-                        Valor da Multa Compensatória
-                      </span>
-
-                      {result.isExempt ? (
-                        <div className="text-4xl font-black tracking-tight text-emerald-400 font-display">
-                          ISENTO
-                        </div>
-                      ) : (
-                        <div className="text-4xl lg:text-5xl font-bold tracking-tight text-emerald-400 font-mono">
-                          <span className="text-lg lg:text-xl mr-1 font-medium text-emerald-500">R$</span>
-                          {formatCurrencyBR(useRounding ? result.fineValueRounded : result.fineValueTruncated).replace('R$', '').trim()}
-                        </div>
-                      )}
-
-                      <div className="mt-4 pt-4 border-t border-slate-800 w-full text-[10px] text-slate-400 uppercase tracking-wider font-mono">
-                        {result.isExempt ? 'Fidelidade integral cumprida' : `Calculado via ${useRounding ? 'Arredondamento' : 'Truncamento'}`}
-                      </div>
-                    </div>
-
                   </div>
-
                 </div>
 
                 {/* Client Shareable Message Card */}

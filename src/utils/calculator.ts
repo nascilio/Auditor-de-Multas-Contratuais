@@ -237,3 +237,118 @@ ${parcelasTexto}
 Ficamos à disposição para esclarecer qualquer dúvida!`;
 }
 
+const MONTH_NAMES_BR = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
+export function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
+
+export function calculateDiscount(data: import('../types').DiscountData): import('../types').DiscountResult {
+  const { monthlyFee, affectedDays, monthYear, discountPercentage = 20 } = data;
+  
+  const [yearStr, monthStr] = (monthYear || '2026-02').split('-');
+  const year = parseInt(yearStr, 10) || new Date().getFullYear();
+  const month = parseInt(monthStr, 10) || (new Date().getMonth() + 1);
+  
+  const daysInMonth = getDaysInMonth(year, month);
+  const monthName = MONTH_NAMES_BR[month - 1] || 'Mês';
+  const monthNameBR = `${monthName} de ${year}`;
+  
+  // 1. Mensalidade / Dias do Mês (ex: 100 / 30 = 3,33)
+  const dailyRate = monthlyFee > 0 && daysInMonth > 0 ? monthlyFee / daysInMonth : 0;
+  
+  // 2. Valor Diário x Dias com problema (ex: 3,33 x 15 = 50,00)
+  const proportionalDaysValue = dailyRate * affectedDays;
+  
+  // 3. Aplicar % de Desconto sobre o valor dos dias afetados (ex: 50,00 x 20% = 10,00)
+  const discountValue = Math.min(monthlyFee, proportionalDaysValue * (discountPercentage / 100));
+  
+  // 4. Valor Líquido Final da Mensalidade
+  const netMonthlyFee = Math.max(0, monthlyFee - discountValue);
+  
+  // Percentual de desconto efetivo sobre a mensalidade inteira
+  const effectiveDiscountPercentage = monthlyFee > 0 ? (discountValue / monthlyFee) * 100 : 0;
+  
+  return {
+    monthlyFee,
+    monthlyFeeFormatted: formatCurrencyBR(monthlyFee),
+    affectedDays,
+    monthYear,
+    monthNameBR,
+    daysInMonth,
+    dailyRate,
+    dailyRateFormatted: formatCurrencyBR(dailyRate),
+    proportionalDaysValue,
+    proportionalDaysValueFormatted: formatCurrencyBR(proportionalDaysValue),
+    discountPercentage,
+    discountValue,
+    discountValueFormatted: formatCurrencyBR(discountValue),
+    netMonthlyFee,
+    netMonthlyFeeFormatted: formatCurrencyBR(netMonthlyFee),
+    effectiveDiscountPercentage
+  };
+}
+
+export function generateDiscountMarkdownReport(data: import('../types').DiscountData): string {
+  const result = calculateDiscount(data);
+  
+  return `# RELATÓRIO DE ISENÇÃO / DESCONTO DE MENSALIDADE (PRO-RATA)
+
+**Data da Auditoria:** ${new Date().toLocaleDateString('pt-BR')}
+
+---
+
+### 1. Parâmetros da Ocorrência
+- **Mensalidade Base do Cliente:** ${result.monthlyFeeFormatted}
+- **Mês/Ano do Ocorrido:** ${result.monthNameBR} (${result.daysInMonth} dias no mês)
+- **Dias Registrados com Problema:** ${result.affectedDays} ${result.affectedDays === 1 ? 'dia' : 'dias'}
+- **Percentual de Desconto Aplicado:** ${result.discountPercentage}%
+
+> 📌 *Nota de Origem:* A quantidade de dias afetados deve ser coletada no ticket do problema no sistema de suporte.
+
+---
+
+### 2. Memória de Cálculo
+1. **Valor por Dia no Mês:**
+   \`\`\`
+   ${result.monthlyFeeFormatted} ÷ ${result.daysInMonth} dias = ${result.dailyRateFormatted} / dia
+   \`\`\`
+
+2. **Valor Correspondente aos Dias Indisponíveis:**
+   \`\`\`
+   ${result.dailyRateFormatted} / dia × ${result.affectedDays} dias = ${result.proportionalDaysValueFormatted}
+   \`\`\`
+
+3. **Aplicação do Desconto Configurado (${result.discountPercentage}%):**
+   \`\`\`
+   ${result.proportionalDaysValueFormatted} × ${result.discountPercentage}% = ${result.discountValueFormatted} (Abatimento Final)
+   \`\`\`
+
+4. **Mensalidade Final a Cobrar:**
+   \`\`\`
+   ${result.monthlyFeeFormatted} - ${result.discountValueFormatted} = ${result.netMonthlyFeeFormatted}
+   \`\`\`
+
+---
+
+### 3. Tabela Resumo da Auditoria
+| Item / Parâmetro | Valor |
+| :--- | :--- |
+| **Mensalidade Integral** | ${result.monthlyFeeFormatted} |
+| **Dias do Mês Selecionado** | ${result.daysInMonth} dias |
+| **Valor por Dia** | ${result.dailyRateFormatted} |
+| **Dias com Problema** | ${result.affectedDays} dias |
+| **Valor Bruto dos Dias Afetados** | ${result.proportionalDaysValueFormatted} |
+| **Percentual de Desconto** | ${result.discountPercentage}% |
+| **Abatimento Final Concedido** | **${result.discountValueFormatted}** |
+| **Valor Final a Cobrar** | **${result.netMonthlyFeeFormatted}** |
+
+---
+
+> ⚠️ **Nota Diretiva Fundamental:**
+> Este cálculo deve ser utilizado como base e referência para o abatimento e não como uma regra absoluta. Existem situações em que o cliente enfrentou instabilidade em apenas uma funcionalidade específica enquanto a plataforma permaneceu operante no geral. Nesses casos, o abatimento pode ser negociado proporcionalmente.`;
+}
+

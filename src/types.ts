@@ -32,3 +32,30 @@ export interface CalculationResult {
   monthsPart: number; // quantidade de meses inteiros restantes
   daysPart: number; // quantidade de dias inteiros restantes
 }
+
+export interface DiscountData {
+  monthlyFee: number;
+  affectedDays: number;
+  monthYear: string; // "YYYY-MM" (ex: "2026-02")
+  discountPercentage: number; // % de desconto a aplicar sobre os dias com problema (ex: 20)
+  notes?: string;
+}
+
+export interface DiscountResult {
+  monthlyFee: number;
+  monthlyFeeFormatted: string;
+  affectedDays: number;
+  monthYear: string; // "YYYY-MM"
+  monthNameBR: string; // ex: "Fevereiro de 2026"
+  daysInMonth: number; // ex: 28
+  dailyRate: number;
+  dailyRateFormatted: string;
+  proportionalDaysValue: number;
+  proportionalDaysValueFormatted: string;
+  discountPercentage: number;
+  discountValue: number;
+  discountValueFormatted: string;
+  netMonthlyFee: number;
+  netMonthlyFeeFormatted: string;
+  effectiveDiscountPercentage: number; // Desconto em relação à mensalidade total
+}

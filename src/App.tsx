@@ -14,7 +14,8 @@ import {
   DollarSign,
   CalendarDays,
   User,
-  Info
+  Info,
+  BadgePercent
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ContractData, CalculationResult } from './types';
@@ -29,6 +30,7 @@ import {
 } from './utils/calculator';
 import CalculationBreakdown from './components/CalculationBreakdown';
 import AuditHistory from './components/AuditHistory';
+import DiscountTab from './components/DiscountTab';
 
 // Preset scenarios for user testability
 const SCENARIOS = [
@@ -74,6 +76,7 @@ export default function App() {
   const [useRounding, setUseRounding] = useState<boolean>(false);
   
   // UI states
+  const [mainTab, setMainTab] = useState<'fidelity' | 'discounts'>('fidelity');
   const [copied, setCopied] = useState<boolean>(false);
   const [shareCopied, setShareCopied] = useState<boolean>(false);
   const [history, setHistory] = useState<ContractData[]>([]);
@@ -226,11 +229,64 @@ export default function App() {
         </div>
       </header>
 
+      {/* Main App Navigation Tabs */}
+      <div className="bg-slate-900 border-b border-slate-800 px-4 md:px-8 py-2.5 print:hidden">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button
+              onClick={() => setMainTab('fidelity')}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                mainTab === 'fidelity'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+              }`}
+            >
+              <FileCheck2 className="w-4 h-4" />
+              <span>Auditoria de Multa Rescisória</span>
+            </button>
+
+            <button
+              onClick={() => setMainTab('discounts')}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                mainTab === 'discounts'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+              }`}
+            >
+              <BadgePercent className="w-4 h-4" />
+              <span>Descontos e Isenções</span>
+              <span className="bg-blue-500/20 text-blue-300 text-[9px] px-1.5 py-0.5 rounded font-mono uppercase tracking-wider border border-blue-500/30">
+                Aba
+              </span>
+            </button>
+          </div>
+
+          {mainTab === 'fidelity' && (
+            <div className="hidden sm:flex items-center gap-2">
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors font-medium border border-slate-700"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Imprimir / PDF
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 md:px-8 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 mt-8">
         
-        {/* Left Side: Parameters and Input Form (4 Cols) */}
-        <div className="lg:col-span-4 space-y-6 print:hidden">
+        {mainTab === 'discounts' ? (
+          <DiscountTab 
+            initialMonthlyFee={monthlyFee} 
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* Left Side: Parameters and Input Form (4 Cols) */}
+            <div className="lg:col-span-4 space-y-6 print:hidden">
           <section className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-slate-950" />
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5 pb-3 border-b border-slate-100 flex items-center gap-2">
@@ -537,10 +593,11 @@ export default function App() {
             )}
 
           </div>
-
         </div>
+      </div>
+    )}
 
-      </main>
+  </main>
 
       {/* Footer credits and information */}
       <footer className="max-w-7xl mx-auto px-4 md:px-8 mt-12 pt-6 border-t border-slate-200/60 text-center text-xs text-slate-400 print:hidden">

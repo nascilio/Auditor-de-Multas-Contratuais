@@ -1,0 +1,33 @@
+{
+  "entities": {
+    "audits": {
+      "title": "Auditoria de Multa Rescisória",
+      "description": "Cálculos de auditoria de multa e fidelidade salvos na nuvem",
+      "type": "object",
+      "properties": {
+        "clientName": { "type": "string" },
+        "contractNumber": { "type": "string" },
+        "signatureDate": { "type": "string" },
+        "requestDate": { "type": "string" },
+        "monthlyFee": { "type": "number" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["monthlyFee", "signatureDate", "requestDate"]
+    },
+    "discounts": {
+      "title": "Descontos e Isenções Pro-Rata",
+      "description": "Cálculos de abatimento por indisponibilidade salvos na nuvem",
+      "type": "object",
+      "properties": {
+        "monthlyFee": { "type": "number" },
+        "affectedDays": { "type": "number" },
+        "monthYear": { "type": "string" },
+        "discountPercentage": { "type": "number" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["monthlyFee", "affectedDays", "monthYear", "discountPercentage"]
+    }
+  }
+}

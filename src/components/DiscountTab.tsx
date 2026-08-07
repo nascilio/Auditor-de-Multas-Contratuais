@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   BadgePercent, 
   CalendarDays, 
@@ -10,13 +10,23 @@ import {
   HelpCircle,
   Info,
   Calculator,
-  RotateCcw
+  RotateCcw,
+  Save,
+  Trash2,
+  Cloud,
+  FileClock
 } from 'lucide-react';
 import { DiscountData } from '../types';
 import { 
   calculateDiscount, 
   generateDiscountMarkdownReport 
 } from '../utils/calculator';
+import { 
+  subscribeToDiscounts, 
+  saveDiscountToFirestore, 
+  deleteDiscountFromFirestore, 
+  SavedDiscountItem 
+} from '../services/firebaseService';
 
 interface DiscountTabProps {
   initialMonthlyFee?: number;
@@ -32,6 +42,35 @@ export default function DiscountTab({ initialMonthlyFee = 500 }: DiscountTabProp
   // UI states
   const [copiedMarkdown, setCopiedMarkdown] = useState<boolean>(false);
   const [outputTab, setOutputTab] = useState<'visual' | 'markdown'>('visual');
+  const [savedDiscounts, setSavedDiscounts] = useState<SavedDiscountItem[]>([]);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+
+  useEffect(() => {
+    const unsub = subscribeToDiscounts((items) => {
+      setSavedDiscounts(items);
+    });
+    return () => unsub();
+  }, []);
+
+  const handleSaveDiscount = async () => {
+    setSaving(true);
+    try {
+      await saveDiscountToFirestore({
+        ...discountData
+      });
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 2000);
+    } catch (e) {
+      console.error("Erro ao salvar no Firestore", e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteDiscount = async (id: string) => {
+    await deleteDiscountFromFirestore(id);
+  };
 
   const discountData: DiscountData = {
     monthlyFee,
@@ -245,8 +284,94 @@ export default function DiscountTab({ initialMonthlyFee = 500 }: DiscountTabProp
                 Esta informação de dias com problema deve ser <strong>coletada e mencionada a partir do ticket do problema</strong> no suporte técnico.
               </div>
 
+              {/* Botão de Salvar no Firebase */}
+              <button
+                type="button"
+                onClick={handleSaveDiscount}
+                disabled={saving}
+                className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-xs ${
+                  savedSuccess
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-900 hover:bg-slate-800 text-white'
+                }`}
+              >
+                {savedSuccess ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-200" />
+                    <span>Salvo no Firebase com Sucesso!</span>
+                  </>
+                ) : (
+                  <>
+                    <Cloud className="w-4 h-4 text-blue-400" />
+                    <span>{saving ? 'Salvando...' : 'Salvar Proposta de Abatimento no Firebase'}</span>
+                  </>
+                )}
+              </button>
+
             </div>
           </section>
+
+          {/* List of Saved Discounts from Firebase */}
+          {savedDiscounts.length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <FileClock className="w-4 h-4 text-blue-600" />
+                  Abatimentos Salvos no Firebase
+                </span>
+                <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono font-bold px-2 py-0.5 rounded-md">
+                  {savedDiscounts.length} {savedDiscounts.length === 1 ? 'item' : 'itens'}
+                </span>
+              </h3>
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {savedDiscounts.map((item) => {
+                  const calc = calculateDiscount(item);
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200/80 transition-all flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div>
+                        <div className="font-bold text-slate-800 flex items-center gap-2">
+                          <span>{calc.netMonthlyFeeFormatted} final</span>
+                          <span className="text-[10px] font-mono bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">
+                            {calc.discountPercentage}% OFF
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                          Base: {calc.monthlyFeeFormatted} • {item.affectedDays} dias • {item.monthYear}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMonthlyFee(item.monthlyFee);
+                            setAffectedDays(item.affectedDays);
+                            setMonthYear(item.monthYear);
+                            setDiscountPercentage(item.discountPercentage);
+                          }}
+                          className="px-2 py-1 text-[10px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors"
+                        >
+                          Carregar
+                        </button>
+                        {item.id && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDiscount(item.id!)}
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                            title="Excluir do Firebase"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Side: Results & Breakdown (7 Cols) */}

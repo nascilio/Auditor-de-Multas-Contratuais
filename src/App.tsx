@@ -15,7 +15,9 @@ import {
   CalendarDays,
   User,
   Info,
-  BadgePercent
+  BadgePercent,
+  Cloud,
+  CloudCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ContractData, CalculationResult } from './types';
@@ -31,6 +33,12 @@ import {
 import CalculationBreakdown from './components/CalculationBreakdown';
 import AuditHistory from './components/AuditHistory';
 import DiscountTab from './components/DiscountTab';
+import { 
+  subscribeToAudits, 
+  saveAuditToFirestore, 
+  deleteAuditFromFirestore, 
+  clearAllAuditsFromFirestore 
+} from './services/firebaseService';
 
 // Preset scenarios for user testability
 const SCENARIOS = [
@@ -83,24 +91,31 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'visual' | 'markdown'>('visual');
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Initialize history from localStorage
+  // Initialize history from Firebase Firestore with fallback to localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('audit_history');
-    if (saved) {
-      try {
-        setHistory(JSON.parse(saved));
-      } catch (e) {
-        console.error("Erro ao carregar histórico", e);
+    const unsubscribe = subscribeToAudits((firestoreAudits) => {
+      if (firestoreAudits && firestoreAudits.length > 0) {
+        setHistory(firestoreAudits);
+        localStorage.setItem('audit_history', JSON.stringify(firestoreAudits));
+      } else {
+        const saved = localStorage.getItem('audit_history');
+        if (saved) {
+          try {
+            setHistory(JSON.parse(saved));
+          } catch (e) {
+            console.error("Erro ao carregar histórico", e);
+          }
+        } else {
+          const initialHistory: ContractData[] = SCENARIOS.map((s, idx) => ({
+            ...s,
+            id: `seed-${idx}`
+          }));
+          setHistory(initialHistory);
+        }
       }
-    } else {
-      // Seed with standard scenarios
-      const initialHistory: ContractData[] = SCENARIOS.map((s, idx) => ({
-        ...s,
-        id: `seed-${idx}`
-      }));
-      setHistory(initialHistory);
-      localStorage.setItem('audit_history', JSON.stringify(initialHistory));
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Sync state validations
@@ -156,10 +171,9 @@ export default function App() {
     setTimeout(() => setShareCopied(false), 2000);
   };
 
-  // Save current audit to history
-  const handleSaveToHistory = () => {
-    const newItem: ContractData = {
-      id: `audit-${Date.now()}`,
+  // Save current audit to history and Firestore
+  const handleSaveToHistory = async () => {
+    const newItem: Omit<ContractData, 'id'> = {
       signatureDate,
       monthlyFee,
       requestDate,
@@ -168,21 +182,37 @@ export default function App() {
       notes: notes.trim() || undefined
     };
 
-    const updated = [newItem, ...history.filter(item => item.id !== newItem.id)];
-    setHistory(updated);
-    localStorage.setItem('audit_history', JSON.stringify(updated));
+    try {
+      await saveAuditToFirestore(newItem);
+    } catch (e) {
+      console.warn("Salvando localmente como fallback", e);
+      const localItem: ContractData = { ...newItem, id: `audit-${Date.now()}` };
+      const updated = [localItem, ...history];
+      setHistory(updated);
+      localStorage.setItem('audit_history', JSON.stringify(updated));
+    }
   };
 
   // Delete single item from history
-  const handleDeleteHistoryItem = (id: string) => {
+  const handleDeleteHistoryItem = async (id: string) => {
+    try {
+      await deleteAuditFromFirestore(id);
+    } catch (e) {
+      console.warn("Excluindo localmente como fallback", e);
+    }
     const updated = history.filter(item => item.id !== id);
     setHistory(updated);
     localStorage.setItem('audit_history', JSON.stringify(updated));
   };
 
   // Clear all history
-  const handleClearHistory = () => {
-    if (confirm("Deseja realmente limpar todo o histórico de auditorias?")) {
+  const handleClearHistory = async () => {
+    if (confirm("Deseja realmente limpar todo o histórico de auditorias da nuvem e local?")) {
+      try {
+        await clearAllAuditsFromFirestore();
+      } catch (e) {
+        console.warn("Limpando localmente como fallback", e);
+      }
       setHistory([]);
       localStorage.removeItem('audit_history');
     }
@@ -215,7 +245,12 @@ export default function App() {
           </div>
 
           {/* Quick Stats Header */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-800/80 text-emerald-400 text-[10px] font-mono font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <CloudCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Firebase Conectado</span>
+            </div>
             <div className="text-right hidden sm:block">
               <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-mono">
                 Protocolo: #2026-{contractNumber || '001'}

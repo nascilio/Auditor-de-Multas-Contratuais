@@ -17,7 +17,8 @@ import {
   Info,
   BadgePercent,
   Cloud,
-  CloudCheck
+  CloudCheck,
+  Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ContractData, CalculationResult } from './types';
@@ -87,6 +88,8 @@ export default function App() {
   const [mainTab, setMainTab] = useState<'fidelity' | 'discounts'>('fidelity');
   const [copied, setCopied] = useState<boolean>(false);
   const [shareCopied, setShareCopied] = useState<boolean>(false);
+  const [savingAudit, setSavingAudit] = useState<boolean>(false);
+  const [auditSavedSuccess, setAuditSavedSuccess] = useState<boolean>(false);
   const [history, setHistory] = useState<ContractData[]>([]);
   const [activeTab, setActiveTab] = useState<'visual' | 'markdown'>('visual');
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -157,39 +160,78 @@ export default function App() {
   const markdownReport = generateMarkdownReport(currentContractData, useRounding);
   const clientShareMessage = generateClientShareMessage(currentContractData, useRounding);
 
+  // Resilient clipboard helper with fallback for iframe sandboxes & automated test suites
+  const copyTextToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {
+      console.warn("navigator.clipboard.writeText failed or blocked, falling back to execCommand", e);
+    }
+
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.setAttribute("readonly", "");
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      textArea.style.top = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.select();
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return successful;
+    } catch (err) {
+      console.error("Fallback execCommand copy failed", err);
+      return false;
+    }
+  };
+
   // Copy markdown to clipboard
-  const handleCopyMarkdown = () => {
-    navigator.clipboard.writeText(markdownReport);
+  const handleCopyMarkdown = async () => {
+    await copyTextToClipboard(markdownReport);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   // Copy client share message
-  const handleCopyShareMessage = () => {
-    navigator.clipboard.writeText(clientShareMessage);
+  const handleCopyShareMessage = async () => {
+    await copyTextToClipboard(clientShareMessage);
     setShareCopied(true);
-    setTimeout(() => setShareCopied(false), 2000);
+    setTimeout(() => setShareCopied(false), 3000);
   };
 
   // Save current audit to history and Firestore
   const handleSaveToHistory = async () => {
+    setSavingAudit(true);
+    const resolvedClientName = clientName.trim() || `Contrato #${contractNumber || '001'} (${formatDateBR(signatureDate)})`;
     const newItem: Omit<ContractData, 'id'> = {
       signatureDate,
       monthlyFee,
       requestDate,
-      clientName: clientName.trim() || `Auditoria ${new Date().toLocaleDateString('pt-BR')}`,
+      clientName: resolvedClientName,
       contractNumber: contractNumber.trim() || undefined,
       notes: notes.trim() || undefined
     };
 
     try {
-      await saveAuditToFirestore(newItem);
+      const firestoreId = await saveAuditToFirestore(newItem);
+      const itemWithId: ContractData = { ...newItem, id: firestoreId };
+      const updated = [itemWithId, ...history.filter(h => h.id !== firestoreId)];
+      setHistory(updated);
+      localStorage.setItem('audit_history', JSON.stringify(updated));
     } catch (e) {
       console.warn("Salvando localmente como fallback", e);
       const localItem: ContractData = { ...newItem, id: `audit-${Date.now()}` };
       const updated = [localItem, ...history];
       setHistory(updated);
       localStorage.setItem('audit_history', JSON.stringify(updated));
+    } finally {
+      setSavingAudit(false);
+      setAuditSavedSuccess(true);
+      setTimeout(() => setAuditSavedSuccess(false), 3000);
     }
   };
 
@@ -332,6 +374,36 @@ export default function App() {
             {/* Form Fields */}
             <div className="space-y-4">
               
+              {/* Cliente e Contrato (Identificação) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1">
+                    <User className="w-3.5 h-3.5 text-blue-600" />
+                    Cliente / Razão Social
+                  </label>
+                  <input
+                    type="text"
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    placeholder="Ex: Empresa Alfa Ltda"
+                    className="w-full text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-hidden transition-all text-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1">
+                    <FileText className="w-3.5 h-3.5 text-blue-600" />
+                    Nº Contrato / Protocolo
+                  </label>
+                  <input
+                    type="text"
+                    value={contractNumber}
+                    onChange={(e) => setContractNumber(e.target.value)}
+                    placeholder="2026-001"
+                    className="w-full text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-hidden transition-all font-mono text-slate-800"
+                  />
+                </div>
+              </div>
+
               {/* Data de Assinatura */}
               <div>
                 <label className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
@@ -412,18 +484,73 @@ export default function App() {
                 </div>
               )}
 
+              {/* Salvar Auditoria Button */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  id="btn-save-audit"
+                  data-testid="btn-save-audit"
+                  onClick={handleSaveToHistory}
+                  disabled={savingAudit}
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                    auditSavedSuccess 
+                      ? 'bg-emerald-600 text-white ring-2 ring-emerald-300' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white active:scale-[0.99]'
+                  }`}
+                >
+                  {auditSavedSuccess ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Auditoria Salva com Sucesso!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>{savingAudit ? 'Salvando...' : 'Salvar Auditoria'}</span>
+                    </>
+                  )}
+                </button>
+
+                {auditSavedSuccess && (
+                  <div 
+                    id="audit-save-success-banner"
+                    data-testid="audit-save-success-banner"
+                    role="status"
+                    aria-live="polite"
+                    className="mt-2 p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-center text-xs text-emerald-800 font-bold animate-in fade-in"
+                  >
+                    ✓ Auditoria salva em Minhas Auditorias com sucesso!
+                  </div>
+                )}
+              </div>
+
               {/* Business Rule Banner inside Sidebar */}
               <div className="border-t border-slate-100 pt-4 mt-2">
-                <div className="p-4 bg-amber-50 border border-amber-100 rounded-lg">
-                  <p className="text-xs font-bold text-amber-800 uppercase mb-1">Regra de Negócio</p>
+                <div className="p-3.5 bg-amber-50/80 border border-amber-100 rounded-xl">
+                  <p className="text-[11px] font-bold text-amber-800 uppercase mb-0.5">Regra de Negócio</p>
                   <p className="text-[11px] leading-relaxed text-amber-700 font-medium">
-                    Fidelidade de 12 meses. Base de cálculo proporcional de dias (pro-rata) considerando a média real de 30,4167 dias por mês.
+                    Fidelidade de 12 meses. Pro-rata de 30,4167 dias por mês (365 / 12).
                   </p>
                 </div>
               </div>
 
             </div>
           </section>
+
+          {/* Minhas Auditorias Section (Saved Audits List with Carregar action) */}
+          <AuditHistory
+            history={history}
+            onSelect={(item) => {
+              setSignatureDate(item.signatureDate);
+              setRequestDate(item.requestDate);
+              setMonthlyFee(item.monthlyFee);
+              if (item.clientName) setClientName(item.clientName);
+              if (item.contractNumber) setContractNumber(item.contractNumber);
+              if (item.notes) setNotes(item.notes);
+            }}
+            onDelete={handleDeleteHistoryItem}
+            onClear={handleClearHistory}
+          />
         </div>
 
         {/* Right Side: Visual and Markdown Outputs (8 Cols) */}
@@ -538,30 +665,51 @@ export default function App() {
                     </div>
                     
                     <button
+                      type="button"
+                      id="btn-copy-share-message"
+                      data-testid="btn-copy-share-message"
                       onClick={handleCopyShareMessage}
-                      className={`flex items-center justify-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all w-full sm:w-auto ${
+                      className={`flex items-center justify-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all w-full sm:w-auto shadow-sm ${
                         shareCopied 
-                          ? 'bg-emerald-50 border border-emerald-200 text-emerald-600' 
-                          : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm'
+                          ? 'bg-emerald-600 text-white ring-2 ring-emerald-300' 
+                          : 'bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.99]'
                       }`}
                     >
                       {shareCopied ? (
                         <>
-                          <Check className="w-4 h-4" />
-                          Mensagem Copiada!
+                          <Check className="w-4 h-4 text-white" />
+                          <span className="font-bold">Mensagem Copiada!</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-4 h-4" />
-                          Copiar Mensagem
+                          <span>Copiar Mensagem</span>
                         </>
                       )}
                     </button>
                   </div>
 
+                  {/* Explicit visible confirmation toast/banner when copied */}
+                  {shareCopied && (
+                    <div 
+                      id="copy-success-banner"
+                      data-testid="copy-success-banner"
+                      role="status"
+                      aria-live="polite"
+                      className="mb-3 p-3 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center gap-2.5 text-emerald-900 text-xs font-bold shadow-xs animate-in fade-in duration-150"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-3.5 h-3.5" />
+                      </div>
+                      <span>Mensagem copiada para a área de transferência! (Copiado com sucesso)</span>
+                    </div>
+                  )}
+
                   <div className="relative">
                     <textarea
                       readOnly
+                      id="client-share-message-textarea"
+                      data-testid="textarea-client-share-message"
                       value={clientShareMessage}
                       className="w-full h-44 rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs font-sans text-slate-700 leading-relaxed resize-none focus:outline-none focus:ring-1 focus:ring-blue-600"
                     />
@@ -585,26 +733,45 @@ export default function App() {
                   
                   {/* Copy Button */}
                   <button
+                    type="button"
+                    id="btn-copy-markdown"
+                    data-testid="btn-copy-markdown"
                     onClick={handleCopyMarkdown}
-                    className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all ${
+                    className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-sm ${
                       copied 
-                        ? 'bg-emerald-50 border border-emerald-200 text-emerald-600' 
-                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                        ? 'bg-emerald-600 text-white ring-2 ring-emerald-300' 
+                        : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.99]'
                     }`}
                   >
                     {copied ? (
                       <>
                         <Check className="w-4 h-4" />
-                        Copiado!
+                        <span className="font-bold">Copiado!</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-4 h-4" />
-                        Copiar Relatório
+                        <span>Copiar Relatório</span>
                       </>
                     )}
                   </button>
                 </div>
+
+                {/* Explicit visible confirmation toast/banner for markdown */}
+                {copied && (
+                  <div 
+                    id="markdown-copy-success-banner"
+                    data-testid="markdown-copy-success-banner"
+                    role="status"
+                    aria-live="polite"
+                    className="mb-3 p-3 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center gap-2.5 text-emerald-900 text-xs font-bold shadow-xs animate-in fade-in duration-150"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                      <Check className="w-3.5 h-3.5" />
+                    </div>
+                    <span>Relatório copiado para a área de transferência com sucesso!</span>
+                  </div>
+                )}
 
                 {/* Markdown view content */}
                 <div className="relative rounded-xl overflow-hidden border border-slate-200/80 bg-slate-950 font-mono text-slate-200 p-5 text-xs overflow-x-auto min-h-[300px] leading-relaxed selection:bg-slate-800">

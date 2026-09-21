@@ -13,12 +13,11 @@ import {
   FileCheck2,
   DollarSign,
   CalendarDays,
-  User,
   Info,
-  BadgePercent,
   Cloud,
   CloudCheck,
-  Save
+  Save,
+  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ContractData, CalculationResult } from './types';
@@ -33,12 +32,13 @@ import {
 } from './utils/calculator';
 import CalculationBreakdown from './components/CalculationBreakdown';
 import AuditHistory from './components/AuditHistory';
-import DiscountTab from './components/DiscountTab';
 import { 
   subscribeToAudits, 
   saveAuditToFirestore, 
   deleteAuditFromFirestore, 
-  clearAllAuditsFromFirestore 
+  clearAllAuditsFromFirestore,
+  purgeExpiredAuditsFromFirestore,
+  RETENTION_PERIOD_MS
 } from './services/firebaseService';
 
 // Preset scenarios for user testability
@@ -47,45 +47,32 @@ const SCENARIOS = [
     name: "Caso de Exemplo (Prompt)",
     signatureDate: "2026-01-01",
     monthlyFee: 500,
-    requestDate: "2026-09-15",
-    clientName: "Empresa Alfa Ltda.",
-    contractNumber: "2026-001",
-    notes: "Exemplo padrão do prompt com 108 dias restantes para o término da fidelidade de 12 meses."
+    requestDate: "2026-09-15"
   },
   {
     name: "Caso de Isenção Completa",
     signatureDate: "2026-01-01",
     monthlyFee: 650,
-    requestDate: "2027-01-01",
-    clientName: "Carlos Eduardo Santos",
-    contractNumber: "2026-142",
-    notes: "Cliente cumpriu exatamente os 12 meses de fidelidade, portanto está isento de multa."
+    requestDate: "2027-01-01"
   },
   {
     name: "Rescisão Recém-Assinado",
     signatureDate: "2026-06-15",
     monthlyFee: 1200,
-    requestDate: "2026-08-10",
-    clientName: "Tech Solutions S/A",
-    contractNumber: "2026-789",
-    notes: "Cancelamento solicitado logo no início do contrato, gerando um alto valor de multa rescisória."
+    requestDate: "2026-08-10"
   }
 ];
 
 export default function App() {
-  // Calculator state
+  // Calculator state: strictly signatureDate, monthlyFee, and requestDate
   const [signatureDate, setSignatureDate] = useState<string>("2026-01-01");
   const [monthlyFee, setMonthlyFee] = useState<number>(500);
   const [requestDate, setRequestDate] = useState<string>("2026-09-15");
-  const [clientName, setClientName] = useState<string>("Empresa Alfa Ltda.");
-  const [contractNumber, setContractNumber] = useState<string>("2026-001");
-  const [notes, setNotes] = useState<string>("");
   
   // Advanced rounding calculation toggle
   const [useRounding, setUseRounding] = useState<boolean>(false);
   
   // UI states
-  const [mainTab, setMainTab] = useState<'fidelity' | 'discounts'>('fidelity');
   const [copied, setCopied] = useState<boolean>(false);
   const [shareCopied, setShareCopied] = useState<boolean>(false);
   const [savingAudit, setSavingAudit] = useState<boolean>(false);
@@ -94,24 +81,69 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'visual' | 'markdown'>('visual');
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // Auto-purga e autoexclusão de dados imputados após 24 horas
+  useEffect(() => {
+    // 1. Purga imediata no Firestore
+    purgeExpiredAuditsFromFirestore();
+
+    // 2. Intervalo periódico de purga (a cada 5 minutos)
+    const purgeInterval = setInterval(() => {
+      purgeExpiredAuditsFromFirestore();
+    }, 5 * 60 * 1000);
+
+    // 3. Verificação de expiração dos dados digitados na sessão (24h de inatividade)
+    const lastInputTime = localStorage.getItem('calc_last_input_time');
+    const now = Date.now();
+    if (lastInputTime && (now - Number(lastInputTime)) >= RETENTION_PERIOD_MS) {
+      // Autoexclui dados imputados após 24h: restaura padrão limpo
+      setSignatureDate("2026-01-01");
+      setMonthlyFee(500);
+      setRequestDate("2026-09-15");
+      localStorage.removeItem('calc_saved_inputs');
+    }
+    localStorage.setItem('calc_last_input_time', String(now));
+
+    return () => clearInterval(purgeInterval);
+  }, []);
+
+  // Atualiza o timestamp de atividade sempre que os campos são alterados
+  useEffect(() => {
+    localStorage.setItem('calc_last_input_time', String(Date.now()));
+  }, [signatureDate, monthlyFee, requestDate]);
+
   // Initialize history from Firebase Firestore with fallback to localStorage
   useEffect(() => {
     const unsubscribe = subscribeToAudits((firestoreAudits) => {
+      const now = Date.now();
       if (firestoreAudits && firestoreAudits.length > 0) {
-        setHistory(firestoreAudits);
-        localStorage.setItem('audit_history', JSON.stringify(firestoreAudits));
+        // Filtra apenas registros com menos de 24h
+        const validAudits = firestoreAudits.filter(a => {
+          if (!a.createdAt) return true;
+          return (now - Number(a.createdAt)) < RETENTION_PERIOD_MS;
+        });
+        setHistory(validAudits);
+        localStorage.setItem('audit_history', JSON.stringify(validAudits));
       } else {
         const saved = localStorage.getItem('audit_history');
         if (saved) {
           try {
-            setHistory(JSON.parse(saved));
+            const parsed: ContractData[] = JSON.parse(saved);
+            const valid = parsed.filter(item => {
+              if (!item.createdAt) return false;
+              return (now - Number(item.createdAt)) < RETENTION_PERIOD_MS;
+            });
+            setHistory(valid);
+            localStorage.setItem('audit_history', JSON.stringify(valid));
           } catch (e) {
             console.error("Erro ao carregar histórico", e);
           }
         } else {
+          const now = Date.now();
           const initialHistory: ContractData[] = SCENARIOS.map((s, idx) => ({
             ...s,
-            id: `seed-${idx}`
+            id: `seed-${idx}`,
+            createdAt: now,
+            expiresAt: now + RETENTION_PERIOD_MS
           }));
           setHistory(initialHistory);
         }
@@ -140,19 +172,13 @@ export default function App() {
     setSignatureDate(scenario.signatureDate);
     setMonthlyFee(scenario.monthlyFee);
     setRequestDate(scenario.requestDate);
-    setClientName(scenario.clientName);
-    setContractNumber(scenario.contractNumber);
-    setNotes(scenario.notes || "");
   };
 
   // Compile contract data
   const currentContractData: ContractData = {
     signatureDate,
     monthlyFee,
-    requestDate,
-    clientName,
-    contractNumber,
-    notes
+    requestDate
   };
 
   // Calculate results
@@ -206,14 +232,15 @@ export default function App() {
   // Save current audit to history and Firestore
   const handleSaveToHistory = async () => {
     setSavingAudit(true);
-    const resolvedClientName = clientName.trim() || `Contrato #${contractNumber || '001'} (${formatDateBR(signatureDate)})`;
+    const resolvedName = `Auditoria (${formatDateBR(signatureDate)} • ${formatCurrencyBR(monthlyFee)})`;
+    const now = Date.now();
     const newItem: Omit<ContractData, 'id'> = {
       signatureDate,
       monthlyFee,
       requestDate,
-      clientName: resolvedClientName,
-      contractNumber: contractNumber.trim() || undefined,
-      notes: notes.trim() || undefined
+      clientName: resolvedName,
+      createdAt: now,
+      expiresAt: now + RETENTION_PERIOD_MS
     };
 
     try {
@@ -224,7 +251,7 @@ export default function App() {
       localStorage.setItem('audit_history', JSON.stringify(updated));
     } catch (e) {
       console.warn("Salvando localmente como fallback", e);
-      const localItem: ContractData = { ...newItem, id: `audit-${Date.now()}` };
+      const localItem: ContractData = { ...newItem, id: `audit-${now}` };
       const updated = [localItem, ...history];
       setHistory(updated);
       localStorage.setItem('audit_history', JSON.stringify(updated));
@@ -288,6 +315,10 @@ export default function App() {
 
           {/* Quick Stats Header */}
           <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/70 border border-amber-800/80 text-amber-300 text-[10px] font-mono font-semibold">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span>Autoexclusão 24h Ativa</span>
+            </div>
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-800/80 text-emerald-400 text-[10px] font-mono font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <CloudCheck className="w-3.5 h-3.5 text-emerald-400" />
@@ -295,7 +326,7 @@ export default function App() {
             </div>
             <div className="text-right hidden sm:block">
               <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold font-mono">
-                Protocolo: #2026-{contractNumber || '001'}
+                Auditoria Ativa
               </span>
             </div>
             <div className="h-8 w-px bg-slate-800 hidden sm:block" />
@@ -306,61 +337,34 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main App Navigation Tabs */}
+      {/* Subheader Action Bar */}
       <div className="bg-slate-900 border-b border-slate-800 px-4 md:px-8 py-2.5 print:hidden">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
-            <button
-              onClick={() => setMainTab('fidelity')}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-                mainTab === 'fidelity'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
-              }`}
-            >
-              <FileCheck2 className="w-4 h-4" />
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-300 flex items-center gap-2">
+              <FileCheck2 className="w-4 h-4 text-blue-400" />
               <span>Auditoria de Multa Rescisória</span>
-            </button>
-
-            <button
-              onClick={() => setMainTab('discounts')}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-                mainTab === 'discounts'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
-              }`}
-            >
-              <BadgePercent className="w-4 h-4" />
-              <span>Descontos e Isenções</span>
-              <span className="bg-blue-500/20 text-blue-300 text-[9px] px-1.5 py-0.5 rounded font-mono uppercase tracking-wider border border-blue-500/30">
-                Aba
-              </span>
-            </button>
+            </span>
+            <span className="hidden sm:inline-block text-[10px] text-slate-400 font-mono bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+              Fidelidade 12 Meses • Pro-rata
+            </span>
           </div>
 
-          {mainTab === 'fidelity' && (
-            <div className="hidden sm:flex items-center gap-2">
-              <button
-                onClick={handlePrint}
-                className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors font-medium border border-slate-700"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                Imprimir / PDF
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors font-medium border border-slate-700"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              Imprimir / PDF
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 mt-8">
-        
-        {mainTab === 'discounts' ? (
-          <DiscountTab 
-            initialMonthlyFee={monthlyFee} 
-          />
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             {/* Left Side: Parameters and Input Form (4 Cols) */}
             <div className="lg:col-span-4 space-y-6 print:hidden">
@@ -371,39 +375,9 @@ export default function App() {
               Parâmetros de Entrada
             </h2>
 
-            {/* Form Fields */}
+            {/* Form Fields: strictly signature date, request date, and monthly fee */}
             <div className="space-y-4">
               
-              {/* Cliente e Contrato (Identificação) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1">
-                    <User className="w-3.5 h-3.5 text-blue-600" />
-                    Cliente / Razão Social
-                  </label>
-                  <input
-                    type="text"
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                    placeholder="Ex: Empresa Alfa Ltda"
-                    className="w-full text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-hidden transition-all text-slate-800"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1">
-                    <FileText className="w-3.5 h-3.5 text-blue-600" />
-                    Nº Contrato / Protocolo
-                  </label>
-                  <input
-                    type="text"
-                    value={contractNumber}
-                    onChange={(e) => setContractNumber(e.target.value)}
-                    placeholder="2026-001"
-                    className="w-full text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-hidden transition-all font-mono text-slate-800"
-                  />
-                </div>
-              </div>
-
               {/* Data de Assinatura */}
               <div>
                 <label className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
@@ -544,9 +518,6 @@ export default function App() {
               setSignatureDate(item.signatureDate);
               setRequestDate(item.requestDate);
               setMonthlyFee(item.monthlyFee);
-              if (item.clientName) setClientName(item.clientName);
-              if (item.contractNumber) setContractNumber(item.contractNumber);
-              if (item.notes) setNotes(item.notes);
             }}
             onDelete={handleDeleteHistoryItem}
             onClear={handleClearHistory}
@@ -797,7 +768,6 @@ export default function App() {
           </div>
         </div>
       </div>
-    )}
 
   </main>
 

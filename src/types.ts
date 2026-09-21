@@ -6,6 +6,8 @@ export interface ContractData {
   clientName?: string;
   contractNumber?: string;
   notes?: string;
+  createdAt?: number; // timestamp em milissegundos
+  expiresAt?: number; // timestamp de expiração (createdAt + 24 horas)
 }
 
 export interface BreakdownItem {

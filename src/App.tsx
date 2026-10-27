@@ -17,7 +17,8 @@ import {
   Cloud,
   CloudCheck,
   Save,
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ContractData, CalculationResult } from './types';
@@ -161,7 +162,7 @@ export default function App() {
     const reqDate = new Date(requestDate);
     
     if (reqDate < sigDate) {
-      setValidationError("Atenção: A data de cancelamento é anterior à data de assinatura do contrato.");
+      setValidationError("Atenção: A data de desativação da plataforma é anterior à data de assinatura do contrato.");
     } else {
       setValidationError(null);
     }
@@ -408,12 +409,27 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Data da Solicitação de Cancelamento */}
-              <div>
+              {/* Data de Desativação da Plataforma */}
+              <div className="relative">
                 <label className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1.5">
                     <CalendarDays className="w-3.5 h-3.5 text-rose-500" />
-                    Data de Solicitação de Cancelamento
+                    <span>Data de Desativação da Plataforma</span>
+                    <span
+                      tabIndex={0}
+                      title="Atenção: Deve ser informada a data de desativação da plataforma e não a data de cancelamento."
+                      className="group relative inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-500 hover:text-white transition-colors cursor-help focus:outline-hidden focus:ring-2 focus:ring-amber-400"
+                    >
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      <span
+                        role="tooltip"
+                        className="pointer-events-none invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100 transition-all duration-150 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 rounded-xl bg-slate-900 text-white text-[11px] font-normal leading-relaxed shadow-xl border border-slate-700 z-50 text-left"
+                      >
+                        <strong className="text-amber-400 font-semibold block mb-0.5">Atenção à nova regra:</strong>
+                        Deverá ser informada a <strong>data de desativação da plataforma</strong> e não a data de solicitação de cancelamento.
+                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+                      </span>
+                    </span>
                   </span>
                   <span className="text-[10px] text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded font-medium">Rescisão</span>
                 </label>

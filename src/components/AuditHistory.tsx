@@ -96,7 +96,7 @@ export default function AuditHistory({ history, onSelect, onDelete, onClear }: A
               <div className="text-[10px] text-slate-500 font-mono flex flex-wrap gap-x-2 gap-y-0.5">
                 <span>Início: {formatDateBR(item.signatureDate)}</span>
                 <span>•</span>
-                <span>Canc.: {formatDateBR(item.requestDate)}</span>
+                <span>Desativ.: {formatDateBR(item.requestDate)}</span>
               </div>
               <div className="text-xs font-extrabold text-slate-700 mt-1">
                 Base: {formatCurrencyBR(item.monthlyFee)}

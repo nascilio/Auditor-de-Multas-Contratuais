@@ -162,7 +162,7 @@ export function generateMarkdownReport(data: ContractData, useRounding: boolean 
   let markdown = `### 📊 Relatório de Rescisão Contratual
 * **Data de Assinatura:** ${result.signatureDateFormatted}
 * **Data de Fim Prevista:** ${result.endDateFormatted}
-* **Data de Solicitação:** ${result.requestDateFormatted}
+* **Data de Desativação da Plataforma:** ${result.requestDateFormatted}
 * **Valor da Mensalidade Base:** ${result.monthlyFeeFormatted}
 
 ---
@@ -203,7 +203,7 @@ export function generateClientShareMessage(data: ContractData, useRounding: bool
     return `Olá! Realizamos a auditoria de fidelidade de seu contrato:
 
 📅 *Início:* ${result.signatureDateFormatted}
-📅 *Cancelamento:* ${result.requestDateFormatted}
+📅 *Desativação da Plataforma:* ${result.requestDateFormatted}
 
 ✅ *Status:* O período de fidelidade de 12 meses já foi cumprido integralmente. A rescisão foi efetuada *sem cobrança de multa compensatória*.
 
@@ -225,7 +225,7 @@ Ficamos à disposição para qualquer dúvida!`;
 
 📅 *Início:* ${result.signatureDateFormatted}
 📅 *Fim Previsto:* ${result.endDateFormatted}
-📅 *Cancelamento:* ${result.requestDateFormatted}
+📅 *Desativação da Plataforma:* ${result.requestDateFormatted}
 💵 *Mensalidade:* ${result.monthlyFeeFormatted}
 
 ⏳ *Tempo Restante:* ${result.daysRemaining} dias (${result.monthsPart} ${result.monthsPart === 1 ? 'mês' : 'meses'} e ${result.daysPart} ${result.daysPart === 1 ? 'dia' : 'dias'})

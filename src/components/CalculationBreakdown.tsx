@@ -38,17 +38,17 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
             Passo 1: Verificação da Fidelidade de 12 Meses
           </h4>
           <p className="text-xs text-slate-500 mt-1">
-            Verifica se a data de cancelamento é anterior à data de término da fidelidade (Data de Assinatura + 12 meses).
+            Verifica se a data de desativação da plataforma é anterior à data de término da fidelidade (Data de Assinatura + 12 meses).
           </p>
           <div className="mt-3 p-3 bg-slate-50 rounded-xl text-xs font-mono text-slate-700 flex flex-wrap gap-4">
             <div><strong>Assinatura:</strong> {result.signatureDateFormatted}</div>
             <div><strong>Fim da Fidelidade:</strong> {result.endDateFormatted}</div>
-            <div><strong>Cancelamento:</strong> {result.requestDateFormatted}</div>
+            <div><strong>Desativação da Plataforma:</strong> {result.requestDateFormatted}</div>
             <div className="w-full pt-1 border-t border-slate-200 mt-1 flex items-center gap-2">
               <span className="font-semibold text-slate-800">Status:</span>
               {isExempt ? (
                 <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                  <CheckCircle className="w-3.5 h-3.5 inline" /> Isento de multa (cancelamento em ou após o fim previsto)
+                  <CheckCircle className="w-3.5 h-3.5 inline" /> Isento de multa (desativação em ou após o fim previsto)
                 </span>
               ) : (
                 <span className="text-amber-600 font-semibold">
@@ -66,11 +66,11 @@ export default function CalculationBreakdown({ result, useRounding }: Calculatio
             Passo 2: Cálculo dos Dias Restantes
           </h4>
           <p className="text-xs text-slate-500 mt-1">
-            Calcula-se a diferença em dias corridos entre a data de solicitação de cancelamento e o fim previsto da fidelidade.
+            Calcula-se a diferença em dias corridos entre a data de desativação da plataforma e o fim previsto da fidelidade.
           </p>
           {!isExempt ? (
             <div className="mt-3 p-3 bg-slate-50 rounded-xl text-xs font-mono text-slate-700 space-y-1">
-               <div>Fórmula: Dias Restantes = Data Fim Prevista - Data de Solicitação</div>
+               <div>Fórmula: Dias Restantes = Data Fim Prevista - Data de Desativação da Plataforma</div>
               <div>Cálculo: {result.endDateFormatted} - {result.requestDateFormatted} = <strong className="text-blue-600">{daysRemaining} dias</strong></div>
             </div>
           ) : (

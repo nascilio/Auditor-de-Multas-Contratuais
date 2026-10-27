@@ -368,9 +368,9 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             {/* Left Side: Parameters and Input Form (4 Cols) */}
-            <div className="lg:col-span-4 space-y-6 print:hidden">
-          <section className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-slate-950" />
+            <div className="lg:col-span-4 space-y-6 print:hidden relative z-20">
+          <section className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-slate-950 rounded-t-2xl" />
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5 pb-3 border-b border-slate-100 flex items-center gap-2">
               <FileCheck2 className="w-4 h-4 text-blue-600" />
               Parâmetros de Entrada
@@ -417,17 +417,16 @@ export default function App() {
                     <span>Data de Desativação da Plataforma</span>
                     <span
                       tabIndex={0}
-                      title="Atenção: Deve ser informada a data de desativação da plataforma e não a data de cancelamento."
                       className="group relative inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-500 hover:text-white transition-colors cursor-help focus:outline-hidden focus:ring-2 focus:ring-amber-400"
                     >
                       <AlertCircle className="w-3.5 h-3.5" />
                       <span
                         role="tooltip"
-                        className="pointer-events-none invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100 transition-all duration-150 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 rounded-xl bg-slate-900 text-white text-[11px] font-normal leading-relaxed shadow-xl border border-slate-700 z-50 text-left"
+                        className="pointer-events-none invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100 transition-all duration-150 absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-72 p-3 rounded-xl bg-slate-900 text-white text-xs font-normal leading-relaxed shadow-2xl border border-slate-700 z-[100] text-left whitespace-normal"
                       >
-                        <strong className="text-amber-400 font-semibold block mb-0.5">Atenção à nova regra:</strong>
+                        <strong className="text-amber-400 font-semibold block mb-1">Atenção à nova regra:</strong>
                         Deverá ser informada a <strong>data de desativação da plataforma</strong> e não a data de solicitação de cancelamento.
-                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-900" />
                       </span>
                     </span>
                   </span>

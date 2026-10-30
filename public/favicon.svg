@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E3A8A" />
+      <stop offset="50%" stop-color="#1D4ED8" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="screenGrad" x1="18" y1="16" x2="46" y2="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+  </defs>
+  <!-- Rounded App Icon Base -->
+  <rect width="64" height="64" rx="16" fill="url(#bgGrad)" />
+  <rect x="2" y="2" width="60" height="60" rx="14" stroke="#3B82F6" stroke-opacity="0.4" stroke-width="2" />
+  
+  <!-- Calculator Body -->
+  <rect x="16" y="11" width="32" height="42" rx="6" fill="#0F172A" stroke="#60A5FA" stroke-width="2.5" />
+  
+  <!-- Calculator Display Screen -->
+  <rect x="21" y="16" width="22" height="9" rx="2.5" fill="url(#screenGrad)" />
+  
+  <!-- Calculator Buttons Grid -->
+  <circle cx="24" cy="32" r="2.2" fill="#93C5FD" />
+  <circle cx="32" cy="32" r="2.2" fill="#93C5FD" />
+  <circle cx="40" cy="32" r="2.2" fill="#38BDF8" />
+  
+  <circle cx="24" cy="39" r="2.2" fill="#93C5FD" />
+  <circle cx="32" cy="39" r="2.2" fill="#93C5FD" />
+  <circle cx="40" cy="39" r="2.2" fill="#38BDF8" />
+  
+  <circle cx="24" cy="46" r="2.2" fill="#93C5FD" />
+  <rect x="30" y="43.8" width="12" height="4.4" rx="2.2" fill="#2563EB" />
+</svg>

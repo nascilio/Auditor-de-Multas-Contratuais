@@ -1,0 +1,17 @@
+{
+  "name": "Calculador de Multas — Auditor de Multas Contratuais",
+  "short_name": "Calculador de Multas",
+  "description": "Assistente financeiro especialista em auditoria de contratos e faturamento para cálculo preciso de multa compensatória por rescisão contratual antecipada.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

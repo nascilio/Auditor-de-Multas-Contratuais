@@ -300,16 +300,20 @@ export default function App() {
       <header className="bg-slate-950 border-b border-slate-900 py-4 px-4 md:px-8 shadow-md sticky top-0 z-40 print:hidden h-16 flex items-center">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-inner border border-slate-800 relative overflow-hidden group">
-              <Calculator className="w-5 h-5 text-blue-500 relative z-10 group-hover:scale-110 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-black opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md border border-blue-500/30 relative overflow-hidden group shrink-0 bg-slate-900">
+              <img
+                src="/favicon.svg"
+                alt="Logo Calculador de Multas"
+                className="w-10 h-10 object-contain group-hover:scale-105 transition-transform duration-300"
+              />
             </div>
             <div>
-              <h1 className="text-sm md:text-base font-extrabold font-display text-white tracking-tight flex items-center gap-1.5 leading-none">
-                Auditor de Multas <span className="bg-gradient-to-r from-blue-600 to-blue-800 text-white text-[9px] font-black px-2 py-0.5 rounded-sm font-mono uppercase tracking-wider">Pro-Rata</span>
+              <h1 className="text-sm md:text-base font-extrabold font-display text-white tracking-tight flex items-center gap-2 leading-none">
+                <span>Calculador de Multas</span>
+                <span className="bg-gradient-to-r from-blue-600 to-blue-800 text-white text-[9px] font-black px-2 py-0.5 rounded-sm font-mono uppercase tracking-wider">Pro-Rata</span>
               </h1>
-              <p className="text-[9px] text-slate-400 font-bold tracking-wider mt-1 uppercase">
-                Auditoria de Fidelidade de Contratos
+              <p className="text-[10px] text-slate-400 font-bold tracking-wider mt-1 uppercase">
+                Auditor de Multas Contratuais • Fidelidade 12 Meses
               </p>
             </div>
           </div>
